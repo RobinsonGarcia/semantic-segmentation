@@ -13,7 +13,7 @@ import sys
 import pprint
 from PIL import Image
 import logging
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 #===================================== HELPER FUNCTIONS ======================================================#
 def lr_schedule(e,i,l_rate0,k,type_='step'):
     if type_=='exp':

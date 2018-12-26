@@ -1,31 +1,41 @@
 import sys
+import os
+import tensorflow as tf
+
 from model.input_fn import input_fn
 from model.model_fn import model_fn
 from model.training import train_and_evaluate
+from model.utils import set_logger
+
 import json
 import logging
-logging.basicConfig(level=logging.DEBUG)
 
-param_path = sys.argv[1]
+if __name__=="__main__":
+    
+    tf.set_random_seed(230)
 
-model_dir = sys.argv[2]
+    param_path = sys.argv[1]
 
-try:
-    restore_from = sys.argv[3]
-except:
-    restore_from = None
+    model_dir = sys.argv[2]
 
-logging.info("reading parameters from:  {}".format(param_path))
+    try:
+        restore_from = sys.argv[3]
+    except:
+        restore_from = None
 
-params = json.loads(open(param_path,'r').read())
+    set_logger(os.path.join(model_dir,'train.log'))
 
-train_inputs = input_fn(True,params['imgs_dir']+'/train',params['masks_dir']+'/train',params)
+    logging.info("reading parameters from:  {}".format(param_path))
 
-val_inputs = input_fn(False,params['imgs_dir']+'/val',params['masks_dir']+'/val',params)
+    params = json.loads(open(param_path,'r').read())
 
-train_model_spec = model_fn(mode='train',inputs=train_inputs,params=params)
+    train_inputs = input_fn(True,params['imgs_dir']+'/train',params['masks_dir']+'/train',params)
 
-val_model_spec = model_fn(mode='eval',inputs=val_inputs,params=params,reuse=True)
+    val_inputs = input_fn(False,params['imgs_dir']+'/val',params['masks_dir']+'/val',params)
 
-train_and_evaluate(train_model_spec,val_model_spec,model_dir,params,restore_from)
+    train_model_spec = model_fn(mode='train',inputs=train_inputs,params=params)
+
+    val_model_spec = model_fn(mode='eval',inputs=val_inputs,params=params,reuse=True)
+
+    train_and_evaluate(train_model_spec,val_model_spec,model_dir,params,restore_from)
 

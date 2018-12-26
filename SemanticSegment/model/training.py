@@ -17,7 +17,7 @@ from tqdm import trange
 from model.evaluation import evaluate_sess,get_masks_t
 from model.utils import save_dict_to_json
 import logging
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 def train_sess(sess,model_specs,num_steps,writer,params):
     
@@ -55,6 +55,8 @@ def train_and_evaluate(train_model_spec,eval_model_spec,model_dir,params,restore
     best_saver = tf.train.Saver(max_to_keep=1)
     last_saver = tf.train.Saver()
     img_pairs = {}
+
+    begin_at_epoch = 0
     with tf.Session() as sess:
         sess.run([train_model_spec['global_var_init'],train_model_spec['local_var_init']])
 

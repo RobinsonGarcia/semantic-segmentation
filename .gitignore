@@ -1,3 +1,13 @@
+# Folders and files
+dataset/
+Shiriu/
+Saga/
+tmp/
+pipeline.sh
+pipeline_log.txt
+random_search_params.pickle
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
