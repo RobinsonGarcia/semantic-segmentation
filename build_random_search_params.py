@@ -17,8 +17,8 @@ args = {
 'alpha':(-30,-1),
 'lr_schedule_type':['step'],
 'reg_rate':(-20,1),
-'imgs_dir':'dataset/imgs',
-'masks_dir':'dataset/masks'
+'imgs_dir':'/models/semantic-segmentation/dataset/imgs',
+'masks_dir':'/models/semantic-segmentation/dataset/masks'
 }
 
 

@@ -62,4 +62,4 @@ if __name__=="__main__":
     pipeline_text.close()
 
     os.system('sudo chmod +x pipeline.sh')
-    os.system('tmux new -s hyper_tunning "sh pipeline.sh"')
+    os.system('sh pipeline.sh')
