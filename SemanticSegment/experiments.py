@@ -56,7 +56,7 @@ if __name__=="__main__":
     tensorboard = 'tensorboard --logdir '
     for i in range(n_models):
         os.system('mkdir '+root+'/experiments/experiment'+str(i).zfill(4))
-        pipeline+='python '+worker+' '+root+'/experiments/params/params'+str(i).zfill(4)+'.json '+root+'/experiments/experiment'+str(i).zfill(4)+'| tee -a '+root+'/experiments/experiment'+str(i).zfill(4)+'/pipeline_log.txt -a pipeline_log.txt;\n'
+        pipeline+='python3 '+worker+' '+root+'/experiments/params/params'+str(i).zfill(4)+'.json '+root+'/experiments/experiment'+str(i).zfill(4)+'| tee -a '+root+'/experiments/experiment'+str(i).zfill(4)+'/pipeline_log.txt -a pipeline_log.txt;\n'
     pipeline_text.write(pipeline)
 
     pipeline_text.close()
