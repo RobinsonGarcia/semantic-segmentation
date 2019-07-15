@@ -19,7 +19,8 @@ def evaluate_sess(sess,model_spec,num_steps,writer=None,params=None):
     update_metrics = model_spec['update_metrics']
     eval_metrics = model_spec['metrics']
     global_step = tf.train.get_global_step()
-    summ_op = model_spec['summary_op']
+    summary_op = model_spec['summary_op']
+    lr = model_spec['lr']
     #==> Initialize dataset and metrics
     sess.run(model_spec['iterator_init_op'])
     sess.run(model_spec['metrics_init_op'])
@@ -28,6 +29,7 @@ def evaluate_sess(sess,model_spec,num_steps,writer=None,params=None):
     #==> Update metrics over the eval dataset
     for _ in range(num_steps):
        sess.run(update_metrics)
+
 
     metrics_values = {k: v[0] for k,v in eval_metrics.items()}
     metrics_val = sess.run(metrics_values)
@@ -39,14 +41,19 @@ def evaluate_sess(sess,model_spec,num_steps,writer=None,params=None):
         for tag,val in metrics_val.items():
             summ = tf.Summary(value=[tf.Summary.Value(tag=tag,simple_value=val)])
             writer.add_summary(summ,global_step_val)
+
+
+
+
+
     return metrics_val
 
 
-def evaluate(model_spec,model_dir,params,restore_from): 
+def evaluate(model_spec,model_dir,params,restore_from):
     saver = tf.train.Saver()
 
     with tf.Session() as sess:
-        
+
         sess.run([model_spec['global_var_init'],model_spec['local_var_init']])
 
         save_path = os.path.join(model_dir, restore_from)
@@ -59,9 +66,3 @@ def evaluate(model_spec,model_dir,params,restore_from):
         metrics_name = '_'.join(restore_from.split('/'))
         save_path = os.path.join(model_dir,"metrics_test_{}.json".format(metrics_name))
         save_dict_to_json(metrics,save_path)
-
-        
-
-
-
-

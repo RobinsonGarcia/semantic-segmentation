@@ -4,6 +4,19 @@ import math
 import numpy as np
 #==> TRANSFORMATION FUNCTIONS, USED 4 DATA AUGMENTATION
 
+_R_MEAN = 123.68/255.
+_G_MEAN = 116.78/255.
+_B_MEAN = 103.94/255.
+
+def mean_image_subtraction(image,label):
+    num_channels = image.get_shape().as_list()[-1]
+    means = [_R_MEAN, _G_MEAN, _B_MEAN]
+    channels = tf.split(axis=2, num_or_size_splits=num_channels, value=image)
+    for i in range(num_channels):
+        channels[i] -= means[i]
+    return tf.concat(axis=2, values=channels) ,label
+
+
 def shift_img(image,label,interpolation='NEAREST'):
     shift = np.random.randint(0, 1)
     if shift:
@@ -13,7 +26,7 @@ def shift_img(image,label,interpolation='NEAREST'):
         image = tf.contrib.image.transform(image, transforms, interpolation)
         label = tf.contrib.image.transform(label, transforms, interpolation)
     return image,label
-                
+
 def flip(image,label):
     flip = np.random.randint(0, 1)
     if flip:
@@ -35,7 +48,7 @@ def rotate(image,label,max_ang=math.pi*30/180,interpolation='NEAREST'):
 def crop(image,label):
     crop_img = np.random.randint(0, 1)
     if crop_img:
-        f = np.random.randint(2,4)
+        f = np.random.randint(1,4)
         H,W,C = image.shape
         seed = np.random.randint(1234)
         image = tf.random_crop(image, size = [int(H//f),int(W//f),int(C)], seed = seed)
@@ -49,31 +62,36 @@ def crop(image,label):
 
 def parse_function(filename,masks,img_size):
     image_string = tf.read_file(filename)
-    
+
     #==> read's the image
     image = tf.image.decode_jpeg(image_string,channels=3)
-    
+
     #==> convert to float values in [0,1]
     image = tf.image.convert_image_dtype(image,tf.float32)
 
     image = tf.image.resize_images(image,[img_size,img_size])
 
     mask_string = tf.read_file(masks)
-    
+
     #==> read's the image
     mask = tf.image.decode_jpeg(mask_string,channels=1)
-    
+
     #==> convert to float values in [0,1]
-    mask = tf.image.convert_image_dtype(mask,tf.float32)
+    #mask = tf.image.convert_image_dtype(mask,tf.float32)
 
     mask = tf.image.resize_images(mask,[img_size,img_size])
- 
+
+
+
+    #image = tf.div((image - tf.reduce_min(image)),(tf.reduce_max(image) - tf.reduce_min(image)))
+
+
     return image,mask
 
 
 #===> PREPROCESSING FOR TRAINING/DATA AUGMENTATION
 def train_preprocess(image,mask):
-    
+
     image,mask = flip(image,mask)
     image,mask = shift_img(image,mask)
     image,mask = rotate(image,mask)
@@ -85,7 +103,8 @@ def train_preprocess(image,mask):
     if sat:
         image = tf.image.random_saturation(image,lower=0.5,upper=1.5)
 
-    image = tf.clip_by_value(image,0.0,1.0)
+    image,mask = mean_image_subtraction(image,mask)
+    #image = tf.clip_by_value(image,0.0,1.0)
     return image,mask
 
 def roundup(num,den):
@@ -108,7 +127,7 @@ def input_fn(is_training,img_dir,mask_dir,params):
             masknames.append(os.path.join(mask_dir,mask))
 
         num_samples = len(filenames)
-        
+
         #global img_size
         #img_size = params['img_size']
 
@@ -123,17 +142,17 @@ def input_fn(is_training,img_dir,mask_dir,params):
             dataset = dataset.map(train_fn,num_parallel_calls = params['num_parallel_calls'])
             dataset = dataset.batch(params['train_batch_size'])
             dataset = dataset.prefetch(1)
-                    
+
         else:
             dataset =  tf.data.Dataset.from_tensor_slices((tf.constant(filenames),tf.constant(masknames)))
             dataset = dataset.map(parse_fn,num_parallel_calls = params['num_parallel_calls'])
             dataset = dataset.batch(params['val_test_batch_size'])
             dataset = dataset.prefetch(1)
-                    
+
         iterator = dataset.make_initializable_iterator()
         images,masks = iterator.get_next()
         iterator_init_op = iterator.initializer
-        
+
         if is_training:
             num_steps = roundup(num_samples*params['data_repeats'],params['train_batch_size'])
         else:
@@ -141,7 +160,5 @@ def input_fn(is_training,img_dir,mask_dir,params):
 
 
         inputs = {'images':images,'labels':masks,'iterator_init_op':iterator_init_op,'n_iters':num_steps}
-        
-        return inputs
-    
 
+        return inputs
